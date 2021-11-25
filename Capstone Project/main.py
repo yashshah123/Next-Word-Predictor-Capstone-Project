@@ -29,14 +29,48 @@ def encode(tokenizer, text_sentence, add_special_tokens=True):
     mask_idx = torch.where(input_ids == tokenizer.mask_token_id)[1].tolist()[0]
     return input_ids, mask_idx
 
-
-def get_all_predictions(text_sentence, top_clean=5):
+def get_predictied_word(res, top_clean=10):
     # ========================= BERT =================================
-    print(text_sentence)
+    i=0
+    c = 0
+    list_words=[]
+    a = res[0]
+    output_text=''
+    if a!="":
+        for w in res:
+            if w!='<mask>':
+                input_text = a +' <mask>'
+                input_ids, mask_idx = encode(bert_tokenizer, input_text)
+                with torch.no_grad():
+                    predict = bert_model(input_ids)[0]
+                bert = decode(bert_tokenizer, predict[0, mask_idx, :].topk(top_k).indices.tolist(), top_clean)
+                if (i+1) < len(res):
+                    output_text = res[i+1]
+                    if output_text in bert:
+                        list_words.append(output_text)
+                        #print(list_words)
+                        c+=1
+                    
+            a = a+' '+output_text 
+            #print(a)
+            i = i+1
+        
+    len_predicted_words = len(list_words)   
+    return c,'\n'.join(list_words[:len_predicted_words])
+
+
+def get_all_predictions(text_sentence, top_clean=10):
+    # ========================= BERT =================================
     input_ids, mask_idx = encode(bert_tokenizer, text_sentence)
+    word_predicted=''
+    accuracy=0
     with torch.no_grad():
         predict = bert_model(input_ids)[0]
+    res = len(text_sentence.split())
     bert = decode(bert_tokenizer, predict[0, mask_idx, :].topk(top_k).indices.tolist(), top_clean)
+    c,word_predicted = get_predictied_word(text_sentence.split())
+    if (res-2)>0: 
+        accuracy = (c/(res-2)) * 100
+    
+    return {'bert': bert,'input_length':res-1, 'predicted_words_length':c,'predictied_words_used':word_predicted,'accuracy':accuracy}
 
-
-    return {'bert': bert}

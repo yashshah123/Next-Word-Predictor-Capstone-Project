@@ -27,6 +27,10 @@ jQuery(document).ready(function () {
             }).done(function (jsondata, textStatus, jqXHR) {
                 console.log(jsondata)
                 $('#text_bert').val(jsondata['bert'])
+                $('#input_length').val(jsondata['input_length'])
+                $('#pred_length').val(jsondata['predicted_words_length'])
+                $('#pred_words').val(jsondata['predictied_words_used'])
+                $('#accuracy').val(jsondata['accuracy'])
             }).fail(function (jsondata, textStatus, jqXHR) {
                 console.log(jsondata)
             });
